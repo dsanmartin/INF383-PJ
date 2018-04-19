@@ -17,16 +17,17 @@ class CA:
     self.states.append(self.initial)
     
     for t in range(1, timesteps):
-      tmp = np.zeros((self.M, self.N))
-      for i in range(1, self.M-1):
-        for j in range(1, self.N-1):
-          tmp[i, j] = self.checkNeighboorhod(t-1, i, j)
+      #tmp = np.zeros((self.M, self.N))
+      #for i in range(1, self.M-1):
+      #  for j in range(1, self.N-1):
+      #    tmp[i, j] = self.checkNeighboorhod(t-1, i, j)
       
+      tmp = self.checkNeighborhood2(t-1)
       self.states.append(tmp)
       
     return self.states
   
-  def checkNeighboorhod(self, t, i, j):
+  def checkNeighborhood(self, t, i, j):
     grid = self.states[t]
     
     if self.neighborhood == 'moore':
@@ -38,6 +39,26 @@ class CA:
       
     if summ >= self.rule: return 1
     else: return 0
+    
+  def checkNeighborhood2(self, t):
+    grid = self.states[t]
+    summ = np.zeros_like(grid)
+
+    if self.neighborhood == 'moore':
+      summ = grid + np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
+        + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) \
+        + np.roll(np.roll(grid, 1, axis=0), 1, axis=1) \
+        + np.roll(np.roll(grid, 1, axis=0), -1, axis=1) \
+        + np.roll(np.roll(grid, -1, axis=0), 1, axis=1) \
+        + np.roll(np.roll(grid, -1, axis=0), -1, axis=1) 
+        
+    elif self.neighborhood == 'vonneumann':
+      summ = grid + np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
+        + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) + grid
+      
+    summ[summ >= self.rule] = 1    
+    return summ
+    
     
   def plotStates(self, t):
     plt.imshow(self.states[t], origin='lower')
