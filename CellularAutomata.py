@@ -13,6 +13,7 @@ class CA:
     self.initial = initial
  
   def propagate(self, timesteps):
+    self.states = []
     self.states.append(self.initial)
     
     for t in range(1, timesteps):
@@ -22,7 +23,6 @@ class CA:
           tmp[i, j] = self.checkNeighboorhod(t-1, i, j)
       
       self.states.append(tmp)
-      self.plotStates(t)
       
     return self.states
   
