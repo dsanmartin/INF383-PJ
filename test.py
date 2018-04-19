@@ -1,4 +1,4 @@
-import CellularAutomata
+import firemodels.cellularautomata as ca
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -15,6 +15,6 @@ rule = 1
 neighborhood = 'vonneumann'#'moore'
 times = 10
 
-CA = CellularAutomata.CA(M, N, initial, rule, neighborhood)
+ca = ca.new(M, N, initial, rule, neighborhood)
 
-sta = CA.propagate(times)
+sta = ca.propagate(times)

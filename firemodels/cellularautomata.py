@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-class CA:   
+class new:   
   states = []
   
   def __init__(self, M, N, initial, rule, neighborhood):
+    self.states = []
     self.M = M
     self.N = N
     self.initial = initial
@@ -13,7 +14,6 @@ class CA:
     self.initial = initial
  
   def propagate(self, timesteps):
-    self.states = []
     self.states.append(self.initial)
     
     for t in range(1, timesteps):
@@ -22,12 +22,12 @@ class CA:
       #  for j in range(1, self.N-1):
       #    tmp[i, j] = self.checkNeighboorhod(t-1, i, j)
       
-      tmp = self.checkNeighborhood2(t-1)
+      tmp = self.checkNeighborhood(t-1)
       self.states.append(tmp)
       
     return self.states
   
-  def checkNeighborhood(self, t, i, j):
+  def checkNeighborhoodOld(self, t, i, j):
     grid = self.states[t]
     
     if self.neighborhood == 'moore':
@@ -40,7 +40,7 @@ class CA:
     if summ >= self.rule: return 1
     else: return 0
     
-  def checkNeighborhood2(self, t):
+  def checkNeighborhood(self, t):
     grid = self.states[t]
     summ = np.zeros_like(grid)
 
@@ -56,7 +56,9 @@ class CA:
       summ = grid + np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
         + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) + grid
       
+    summ[summ < self.rule] = 0
     summ[summ >= self.rule] = 1    
+     
     return summ
     
     
