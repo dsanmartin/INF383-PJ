@@ -1,2 +1,3 @@
-# INF383-PJ
-Project - Models and Quantitative Methods Workshop
+# INF-384 Models and Quantitative Methods Workshop
+## Project 
+### Ignacio Araya, Daniel San Martín
