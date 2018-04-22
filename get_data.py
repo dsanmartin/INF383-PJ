@@ -71,13 +71,39 @@ def interpolateScalar(data, kind='linear'):
     Z = f(xfine, xfine)
     
   return Z
+
+def interpolateVector(X, Y):
+  WX = X.flatten().reshape(-1, 1)
+  WY = Y.flatten().reshape(-1, 1)
+  W = np.concatenate((WX, WY), axis=1)
+  x = np.linspace(0, 1, len(X))
+  xfine = np.linspace(0, 1, 100)
   
-def plotScalar(temperature, cmap_):
+  xrbf, yrbf = np.meshgrid(x, x)
+  print(xrbf.flatten().shape, yrbf.flatten().shape, W.shape)
+  rbfi = interpolate.Rbf(xrbf.flatten(), yrbf.flatten(), 
+                         W, epsilon=.25) 
+  X, Y = np.meshgrid(xfine, xfine)
+  Z = rbfi(X, Y)
+  
+  return Z
+  
+def plotScalar(data, cmap_):
   #plt.contour(temperature, cmap=cm.jet)
   #plt.imshow(temperature, cmap=cm.jet)
-  plt.pcolor(temperature, cmap=cmap_)
+  plt.pcolor(data, cmap=cmap_)
   plt.show()
   
+def plotVector(U, V):
+  plt.quiver(U, V)
+  plt.show()
+  
+def createWind(wind_speed, wind_direction):
+  angle = np.radians((wind_direction + 180) % 360)
+  X = np.multiply(wind_speed, np.cos(angle))
+  Y = np.multiply(wind_speed, np.sin(angle))
+  
+  return X, Y
 
 #M, N = 10, 10
 #temperature = getWeather(-35.3803, -72.3652, -35.5235, -72.1894, M, N)
@@ -94,7 +120,10 @@ wind_direction = np.load('data/wind_direction.npy')
 humidity = np.load('data/humidity.npy')
 pressure = np.load('data/pressure.npy')
 
-print(np.radians(wind_direction))
+WX, WY = createWind(wind_speed, wind_direction)
+
+W = interpolateVector(WX, WY)
+plotVector(W)
 
 T = interpolateScalar(temperature)
 WS = interpolateScalar(wind_speed)
