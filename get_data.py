@@ -72,21 +72,12 @@ def interpolateScalar(data, kind='linear'):
     
   return Z
 
-def interpolateVector(X, Y):
-  WX = X.flatten().reshape(-1, 1)
-  WY = Y.flatten().reshape(-1, 1)
-  W = np.concatenate((WX, WY), axis=1)
-  x = np.linspace(0, 1, len(X))
-  xfine = np.linspace(0, 1, 100)
+def interpolateVector(X, Y, kind='linear'):
+  WX = interpolateScalar(X, kind)
+  WY = interpolateScalar(Y, kind)
   
-  xrbf, yrbf = np.meshgrid(x, x)
-  print(xrbf.flatten().shape, yrbf.flatten().shape, W.shape)
-  rbfi = interpolate.Rbf(xrbf.flatten(), yrbf.flatten(), 
-                         W, epsilon=.25) 
-  X, Y = np.meshgrid(xfine, xfine)
-  Z = rbfi(X, Y)
-  
-  return Z
+  return WX, WY
+
   
 def plotScalar(data, cmap_):
   #plt.contour(temperature, cmap=cm.jet)
@@ -120,17 +111,25 @@ wind_direction = np.load('data/wind_direction.npy')
 humidity = np.load('data/humidity.npy')
 pressure = np.load('data/pressure.npy')
 
-WX, WY = createWind(wind_speed, wind_direction)
+#%%
 
-W = interpolateVector(WX, WY)
-plotVector(W)
+WX, WY = createWind(wind_speed, wind_direction)
 
 T = interpolateScalar(temperature)
 WS = interpolateScalar(wind_speed)
+WD = interpolateScalar(wind_direction)
 H = interpolateScalar(humidity)
 P = interpolateScalar(pressure, 'rbf')
+U, V = interpolateVector(WX, WY, 'rbf')
+
+#np.save('data/temperature100x100.npy', T)
+#np.save('data/wind_speed100x100.npy', WS)
+#np.save('data/wind_direction100x100.npy', WD)
+#np.save('data/humidity100x100.npy', H)
+#np.save('data/pressure100x100.npy', P)
 
 plotScalar(T, cm.jet)
 plotScalar(WS, cm.Blues)
 plotScalar(H, cm.GnBu)
 plotScalar(P, cm.Purples)
+plotVector(U[::5, ::5], V[::5, ::5])

@@ -1,63 +1,36 @@
-import firemodels.cellularautomata as ca
+#import firemodels.cellularautomata as ca
+import firemodels.cellularautomatalayers as cal
 import numpy as np
-import matplotlib.pyplot as plt
-import requests
+#import matplotlib.pyplot as plt
+#import ipywidgets as widgets
 
-#def fireFocus(M, N, i, j, size):
-#  focus = np.zeros((M, N))
-#  focus[i-size:i+size, j-size:j+size] = np.ones((size, size)) 
-#  return focus
-#  
-## Testing
-#M = 101
-#N = 101
-#initial = fireFocus(M, N, 50, 50, 1)
-#rule = 1
-#neighborhood = 'vonneumann'#'moore'
-#times = 10
-#
-#ca = ca.new(M, N, initial, rule, neighborhood)
-#
-#sta = ca.propagate(times)
-base = "http://api.wunderground.com/api/35c89267da3bc202/conditions/q/"
-#base = "http://api.openweathermap.org/data/2.5/weather?"
-#lat=-38.7290843&lon=-72.6377406
-#end = "&units=metric&appid=bfba84a8e1deeb1bd7a3f034aaba4009"
-
-def getWeather(start_lat, start_lng, end_lat, end_lng, M, N):
-  delta_lat = (end_lat - start_lat) / M
-  delta_lng = (end_lng - start_lng) / N
+def fireFocus(M, N, i, j, size):
+    focus = np.zeros((M, N))
+    focus[i-size:i+size, j-size:j+size] = np.ones((2*size, 2*size)) 
+    return focus
   
-  temp = np.zeros((M, N))
-  
-  for i in range(M):
-    for j in range(N):
-      lat = start_lat + i * delta_lat
-      lng = start_lng + j * delta_lng
-      
-      #url = base + "lat=" + str(lat) + "&lon=" + str(lng) + end #+ ".json"      
-      url = base + str(lat) + "," + str(lng) + ".json" 
-      #data = requests.get(url).json()['main']
-      data = requests.get(url).json()['current_observation']
+# Testing
+temperature = np.load('data/temperature100x100.npy')
+wind_speed = np.load('data/wind_speed100x100.npy')
+humidity = np.load('data/humidity100x100.npy')
+pressure = np.load('data/pressure100x100.npy')
 
-      #d = float(data['temp'])
-      d = float(data['temp_c'])
-      #print(d)
-      
+temperature = temperature / np.max(temperature)
+wind_speed = wind_speed / np.max(wind_speed)
+humidity = humidity / np.max(humidity)
+pressure = pressure / np.max(pressure)
 
-      temp[i, j] = float(d)
-      
-  return temp
+(M, N) = temperature.shape
+world = [temperature, wind_speed, humidity, pressure]
+initial = fireFocus(M, N, 5, 5, 4)
+#neighborhood = 'vonneumann'
+neighborhood = 'moore'
+alpha = .7
+beta = 1-alpha
+times = 10
 
-M, N = 100, 100
-temperatura = getWeather(-35.3803, -72.3652, -35.5235, -72.1894, M, N)
+automata = cal.new(initial, world, neighborhood, alpha, beta)
+states = automata.propagate(times)
 
-plt.imshow(temperatura)
-plt.show()
-#print(data['temp_c'])
-
-# Resampling image
-#subimg = np.zeros((SO_SIZE, SO_SIZE))
-#for i in range(SO_SIZE):
-#    for j in range(SO_SIZE):
-#        subimg[i, j] = img[5*i+3, 5*j+3]
+for i in range(len(states)):
+  automata.plotStates(i)
