@@ -43,7 +43,10 @@ class new:
     
       neigh /= 4
     
-    threshold = self.alpha * neigh + self.beta * env
+    possible = np.zeros_like(grid)
+    possible[neigh > 0] = 1
+    
+    threshold = (self.alpha * neigh + self.beta * env) * possible
     
     prob = np.random.uniform(size=grid.shape)
   
