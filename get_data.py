@@ -79,10 +79,12 @@ def interpolateVector(X, Y, kind='linear'):
   return WX, WY
 
   
-def plotScalar(data, cmap_):
+def plotScalar(data, title, cmap_):
   #plt.contour(temperature, cmap=cm.jet)
   #plt.imshow(temperature, cmap=cm.jet)
-  plt.pcolor(data, cmap=cmap_)
+  pc = plt.pcolor(data, cmap=cmap_)
+  plt.title(title)
+  plt.colorbar(pc)
   plt.show()
   
 def plotVector(U, V):
@@ -128,8 +130,8 @@ U, V = interpolateVector(WX, WY, 'rbf')
 #np.save('data/humidity100x100.npy', H)
 #np.save('data/pressure100x100.npy', P)
 
-plotScalar(T, cm.jet)
-plotScalar(WS, cm.Blues)
-plotScalar(H, cm.GnBu)
-plotScalar(P, cm.Purples)
+plotScalar(T, "Temperature", cm.jet)
+plotScalar(WS, "Wind speed", cm.Blues)
+plotScalar(H, "Humidity", cm.GnBu)
+plotScalar(P, "Pressure", cm.Purples)
 plotVector(U[::5, ::5], V[::5, ::5])

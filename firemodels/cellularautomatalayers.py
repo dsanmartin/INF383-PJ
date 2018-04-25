@@ -43,18 +43,23 @@ class new:
     
       neigh /= 4
     
+    # Cells with possibility of burning
     possible = np.zeros_like(grid)
     possible[neigh > 0] = 1
     
+    # Compute threshold
     threshold = (self.alpha * neigh + self.beta * env) * possible
     
+    # Random values
     prob = np.random.uniform(size=grid.shape)
   
-    #out = np.ones_like(grid)
-    prob[prob <= threshold] = 1
+    # New burning trees
+    prob[prob <= threshold] = 1 
     prob[prob != 1] = 0
-    #
-    #out *= prob
+    
+    # New states
+    out = prob + grid # Keep old states burning + new states
+    out[out > 1] = 1
        
     if False:
       print("Neighborhood")
@@ -79,7 +84,7 @@ class new:
       
       
      
-    return prob#out
+    return out
     
     
   def plotStates(self, t):
