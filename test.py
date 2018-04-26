@@ -38,7 +38,7 @@ initial = fireFocus(M, N, 5, 5, 4)
 neighborhood = 'moore'
 alpha = .7
 beta = 1-alpha
-times = 10
+times = 100
 
 automata = cal.new(initial, world, neighborhood, alpha, beta)
 states = automata.propagate(times)

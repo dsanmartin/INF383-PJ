@@ -51,15 +51,19 @@ class new:
     threshold = (self.alpha * neigh + self.beta * env) * possible
     
     # Random values
-    prob = np.random.uniform(size=grid.shape)
+    #prob = np.random.uniform(size=grid.shape)
   
     # New burning trees
-    prob[prob <= threshold] = 1 
-    prob[prob != 1] = 0
+    #prob[prob <= threshold] = 1 
+    #prob[prob != 1] = 0
     
     # New states
-    out = prob + grid # Keep old states burning + new states
-    out[out > 1] = 1
+    #out = prob + grid # Keep old states burning + new states
+    #out[out > 1] = 1
+    threshold[threshold < 0.5] = 0
+    threshold[threshold >= 0.5] = 1 
+    
+    out = threshold
        
     if False:
       print("Neighborhood")
