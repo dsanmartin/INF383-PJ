@@ -9,11 +9,22 @@ def fireFocus(M, N, i, j, size):
     focus[i-size:i+size, j-size:j+size] = np.ones((2*size, 2*size)) 
     return focus
   
+def windDirectionConversion(wind_direction, neigh):
+  if neigh == 'vonneumann':
+    return np.around((wind_direction%360)/90).astype(int)
+  elif neigh == 'moore':
+    return np.around((wind_direction%360)/45).astype(int)
+  else:
+    return False
+  
 # Testing
 temperature = np.load('data/temperature100x100.npy')
 wind_speed = np.load('data/wind_speed100x100.npy')
 humidity = np.load('data/humidity100x100.npy')
 pressure = np.load('data/pressure100x100.npy')
+wind_direction = np.load('data/wind_direction100x100.npy')
+
+#%%
 
 temperature = temperature / np.max(temperature)
 wind_speed = wind_speed / np.max(wind_speed)
