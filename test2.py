@@ -1,17 +1,18 @@
-import firemodels.discrete as temperature
+import firemodels.temperature as temperature
 import numpy as np
 
-def fireFocus(M, N, i, j, size):
-    focus = np.zeros((M, N))
-    focus[i-size:i+size, j-size:j+size] = 1e3*np.ones((2*size, 2*size)) 
-    return focus
+def temperatureFocus(M, N):
+    x = np.linspace(0, 1, N)
+    y = np.linspace(0, 1, M)
+    X, Y = np.meshgrid(x, y)
+    return 1e3*np.exp(-1000*((X-.5)**2 + (Y-.5)**2))
   
 M, N = 100, 100
-initial = fireFocus(M, N, 50, 50, 2)
+initial = temperatureFocus(M, N)
 
 times = 100
 
-dtemp = temperature.new(initial)
+dtemp = temperature.new(initial, 1/30)
 states = dtemp.propagate(times)
 
 for i in range(len(states)):

@@ -9,14 +9,6 @@ def fireFocus(M, N, i, j, size):
     focus[i-size:i+size, j-size:j+size] = np.ones((2*size, 2*size)) 
     return focus
   
-def windDirectionConversion(wind_direction, neigh):
-  if neigh == 'vonneumann':
-    return np.around((wind_direction%360)/90).astype(int)
-  elif neigh == 'moore':
-    return np.around((wind_direction%360)/45).astype(int)
-  else:
-    return False
-  
 # Testing
 temperature = np.load('data/temperature100x100.npy')
 wind_speed = np.load('data/wind_speed100x100.npy')
@@ -31,16 +23,21 @@ wind_speed = wind_speed / np.max(wind_speed)
 humidity = humidity / np.max(humidity)
 pressure = pressure / np.max(pressure)
 
+wd = np.ones_like(temperature)*0
+#ws = np.ones_like(temperature)
+#print(wd)
+
 (M, N) = temperature.shape
-world = [temperature, wind_speed, humidity, pressure]
-initial = fireFocus(M, N, 5, 5, 4)
+world = [temperature, wind_speed, wd, humidity, pressure]
+initial = fireFocus(M, N, 50, 50, 2)
 #neighborhood = 'vonneumann'
 neighborhood = 'moore'
-alpha = .7
+alpha = .5
 beta = 1-alpha
-times = 100
+times = 30
+rule = .3
 
-automata = cal.new(initial, world, neighborhood, alpha, beta)
+automata = cal.new(initial, world, neighborhood, rule, alpha, beta)
 states = automata.propagate(times)
 
 for i in range(len(states)):
