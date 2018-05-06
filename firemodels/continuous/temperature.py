@@ -5,14 +5,12 @@ from scipy.interpolate import interp2d
 #from matplotlib import cm
 
 class new:
-  #temperatures = []
   
   def __init__(self, u0, mu, dt, T):
     self.u0 = u0
     self.mu = mu
     self.dt = dt
     self.T = T
-    self.temperatures = [u0.flatten()]
     self.M, self.N = u0.shape
     self.x = np.linspace(0, 1, self.M)
     self.y = np.linspace(0, 1, self.N)
@@ -43,7 +41,7 @@ class new:
     # Method of lines
     U = odeint(self.F, self.u0.flatten(), self.t, args=(self.mu,)) 
     
-    self.temperatures.extend(U)
+    return U
 
   def solveSPDE1(self):
     # Solve
@@ -54,7 +52,7 @@ class new:
         W =  self.F(U[i-1,:], self.t, self.mu)
         U[i,:] = U[i-1,:] + W*self.dt + np.random.normal(0, self.dt, W.shape)
     
-    self.temperatures.extend(U)
+    return U
     
 
   def solveSPDE2(self):
@@ -65,12 +63,12 @@ class new:
         W =  self.F(U[i-1,:], self.t, self.mu)
         U[i,:] = U[i-1,:] + W*self.dt + np.random.normal(0, self.dt, W.shape)*W
     
-    self.temperatures.extend(U)
+    return U
     
 
-  def plotTemperatures(self, t):
+  def plotTemperatures(self, t, temperatures):
     fine = np.linspace(0, 1, 2*self.N)
-    fu = interp2d(self.x, self.y, self.temperatures[t].reshape(self.u0.shape), kind='cubic')
+    fu = interp2d(self.x, self.y, temperatures[t].reshape(self.u0.shape), kind='cubic')
     U = fu(fine, fine)
     plt.imshow(U, origin='lower', cmap=plt.cm.jet)
     plt.colorbar()
