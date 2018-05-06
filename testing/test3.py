@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun May  6 14:37:52 2018
-
-@author: iaaraya
-"""
-
 import firemodels.continuous.temperature as ctemp
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,13 +18,15 @@ initial = temperatureFocus(M, N)
 # Parameters
 mu = 1/5 
 T = 100
-dt = 1e-4
+dt = 1e-2
 
 # We have to include border conditions, for now only 
 # use dirichlet f(x,y) = u(x,y) for (x,y) \in \partial\Omega
-ct = ctemp.new(initial)
+ct = ctemp.new(initial, mu, dt, T)
+ct.solvePDE()
+#t, U = ct.solveStochasticPDE(mu, dt, T)
 
-t, U = ct.solveStochasticPDE2(mu, dt, T)
 
-for i in range(0, len(t)):
+for i in range(0, len(ct.temperatures)):
   ct.plotTemperatures(i)
+

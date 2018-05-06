@@ -5,16 +5,21 @@ from scipy.interpolate import interp2d
 #from matplotlib import cm
 
 class new:
-  temperatures = []
+  #temperatures = []
   
-  def __init__(self, u0):
+  def __init__(self, u0, mu, dt, T):
     self.u0 = u0
+    self.mu = mu
+    self.dt = dt
+    self.T = T
     self.temperatures = [u0.flatten()]
     self.M, self.N = u0.shape
     self.x = np.linspace(0, 1, self.M)
     self.y = np.linspace(0, 1, self.N)
+    self.t = np.linspace(0, dt*T, self.T)
     self.dx = self.x[1] - self.x[0]
     self.dy = self.y[1] - self.y[0]
+    self.dt = self.t[1] - self.t[0]
     
   
   def F(self, U, t, mu):    
@@ -32,41 +37,36 @@ class new:
     return W.flatten() # Flatten for odeint
     
     
-  # Solve PDE# Solve 
-  def solvePDE(self, mu, dt, T):
-    t = np.linspace(0, dt*T, T)
+  # Solve PDE
+  def solvePDE(self):
+    
     # Method of lines
-    U = odeint(self.F, self.u0.flatten(), t, args=(mu,)) 
+    U = odeint(self.F, self.u0.flatten(), self.t, args=(self.mu,)) 
     
     self.temperatures.extend(U)
-    
-    return t, self.temperatures
 
-  def solveStochasticPDE1(self, mu, dt, T):
-    t = np.linspace(0, dt*T, T)
-    # Method of lines
-    U = np.zeros((T+1,self.u0.flatten().shape[0]))
+  def solveSPDE1(self):
+    # Solve
+    U = np.zeros((self.T+1, self.u0.flatten().shape[0]))
     U[0,:] = self.u0.flatten()
-    for i in range(1,T+1):
-        W =  self.F(U[i-1,:], t, mu)
-        U[i,:] = U[i-1,:] + W*dt + np.random.normal(0,dt,W.shape)
+    
+    for i in range(1, self.T+1):
+        W =  self.F(U[i-1,:], self.t, self.mu)
+        U[i,:] = U[i-1,:] + W*self.dt + np.random.normal(0, self.dt, W.shape)
     
     self.temperatures.extend(U)
     
-    return t, self.temperatures
 
-def solveStochasticPDE2(self, mu, dt, T):
-    t = np.linspace(0, dt*T, T)
-    # Method of lines
-    U = np.zeros((T+1,self.u0.flatten().shape[0]))
+  def solveSPDE2(self):
+    # Solve
+    U = np.zeros((self.T+1,self.u0.flatten().shape[0]))
     U[0,:] = self.u0.flatten()
-    for i in range(1,T+1):
-        W =  self.F(U[i-1,:], t, mu)
-        U[i,:] = U[i-1,:] + W*dt + np.random.normal(0,dt,W.shape)*W
+    for i in range(1, self.T+1):
+        W =  self.F(U[i-1,:], self.t, self.mu)
+        U[i,:] = U[i-1,:] + W*self.dt + np.random.normal(0, self.dt, W.shape)*W
     
     self.temperatures.extend(U)
     
-    return t, self.temperatures
 
   def plotTemperatures(self, t):
     fine = np.linspace(0, 1, 2*self.N)

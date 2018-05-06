@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun May  6 14:37:35 2018
+Created on Sun May  6 14:37:52 2018
 
 @author: iaaraya
 """
@@ -25,13 +25,12 @@ initial = temperatureFocus(M, N)
 # Parameters
 mu = 1/5 
 T = 100
-dt = 1e-4
+dt = 1e-3
 
 # We have to include border conditions, for now only 
 # use dirichlet f(x,y) = u(x,y) for (x,y) \in \partial\Omega
-ct = ctemp.new(initial)
+ct = ctemp.new(initial, mu, dt, T)
+ct.solveSPDE2()
 
-t, U = ct.solveStochasticPDE1(mu, dt, T)
-
-for i in range(0, len(t)):
+for i in range(0, T+1):
   ct.plotTemperatures(i)
