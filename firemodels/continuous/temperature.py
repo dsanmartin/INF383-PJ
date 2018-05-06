@@ -42,6 +42,32 @@ class new:
     
     return t, self.temperatures
 
+  def solveStochasticPDE1(self, mu, dt, T):
+    t = np.linspace(0, dt*T, T)
+    # Method of lines
+    U = np.zeros((T+1,self.u0.flatten().shape[0]))
+    U[0,:] = self.u0.flatten()
+    for i in range(1,T+1):
+        W =  self.F(U[i-1,:], t, mu)
+        U[i,:] = U[i-1,:] + W*dt + np.random.normal(0,dt,W.shape)
+    
+    self.temperatures.extend(U)
+    
+    return t, self.temperatures
+
+def solveStochasticPDE2(self, mu, dt, T):
+    t = np.linspace(0, dt*T, T)
+    # Method of lines
+    U = np.zeros((T+1,self.u0.flatten().shape[0]))
+    U[0,:] = self.u0.flatten()
+    for i in range(1,T+1):
+        W =  self.F(U[i-1,:], t, mu)
+        U[i,:] = U[i-1,:] + W*dt + np.random.normal(0,dt,W.shape)*W
+    
+    self.temperatures.extend(U)
+    
+    return t, self.temperatures
+
   def plotTemperatures(self, t):
     fine = np.linspace(0, 1, 2*self.N)
     fu = interp2d(self.x, self.y, self.temperatures[t].reshape(self.u0.shape), kind='cubic')
