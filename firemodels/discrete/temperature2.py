@@ -25,9 +25,12 @@ class new:
       north = np.roll(grid, -1, axis=1)
       south = np.roll(grid, 1, axis=1)
       
-      temp = (1/5)*(grid + east + west + north + south) \
-              + A*(grid*((1000 - grid)/8000 + 4/5) + \
-            (east + west + north + south)*((1000 - grid)/2000 - 1/5))
+      #temp = (1/5)*(grid + east + west + north + south) \
+      #        + A*(grid*((1000 - grid)/8000 + 4/5) + \
+      #      (east + west + north + south)*((1000 - grid)/2000 - 1/5))
+      
+      temp = (1 - A)*(1/5)*(grid + east + west + north + south) \
+              + A*(grid*(1000 - grid)/8000 + grid)
       
       self.temperatures.append(temp)
       

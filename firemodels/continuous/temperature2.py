@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May  6 20:16:41 2018
+
+@author: iaaraya
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
@@ -6,7 +13,7 @@ from scipy.interpolate import interp2d
 
 class new:
   
-  def __init__(self, u0, mu, dt, T):
+  def __init__(self, u0, mu, dt, T, b, maxTemp):
     self.u0 = u0
     self.mu = mu
     self.dt = dt
@@ -14,10 +21,13 @@ class new:
     self.M, self.N = u0.shape
     self.x = np.linspace(0, 1, self.M)
     self.y = np.linspace(0, 1, self.N)
-    self.t = np.linspace(0, dt*T, self.T)
     self.dx = self.x[1] - self.x[0]
     self.dy = self.y[1] - self.y[0]
+    #self.dt = self.dx
+    self.t = np.linspace(0, dt*T, self.T)
     self.dt = self.t[1] - self.t[0]
+    self.b = b
+    self.maxTemp = maxTemp
     
   
   def F(self, U, t, mu):    
@@ -36,11 +46,21 @@ class new:
     
     
   # Solve PDE
-  def solvePDE(self):
+  def solvePDE(self,A):
     
-    # Method of lines
-    U = odeint(self.F, self.u0.flatten(), self.t, args=(self.mu,)) 
+    U = np.zeros((self.T+1, self.u0.flatten().shape[0]))
+    U[0,:] = self.u0.flatten()
+    A = A.flatten()
     
+    for i in range(1, self.T+1):
+        A[U[i-1,:] >= 400] = 1
+        A[U[i-1,:] < 400] = 0
+        
+        W =  self.F(U[i-1,:], self.t, self.mu)
+        
+        U[i,:] = U[i-1,:] + (1 - A)*W*self.dt + A*(self.maxTemp - U[i-1,:])*U[i-1,:]*self.dt/self.b   
+        
+        
     return U
 
   def solveSPDE1(self):
@@ -50,8 +70,7 @@ class new:
     
     for i in range(1, self.T+1):
         W =  self.F(U[i-1,:], self.t, self.mu)
-        print(W)
-        U[i,:] = U[i-1,:] + W*self.dt + np.random.normal(0, self.dt, W.shape)*0
+        U[i,:] = U[i-1,:] + W*self.dt + np.random.normal(0, self.dt, W.shape)
     
     return U
     

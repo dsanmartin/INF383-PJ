@@ -4,7 +4,8 @@ Created on Sun May  6 15:35:05 2018
 
 @author: iaaraya
 """
-
+import sys
+sys.path.append('../')
 import firemodels.discrete.temperature2 as temperature
 import numpy as np
 
