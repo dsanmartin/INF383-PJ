@@ -21,9 +21,9 @@ class new:
       
     return self.temperatures
   
-  def plotTemperatures(self, t):
+  def plotTemperatures(self, t, temperatures):
     #cmap = colors.ListedColormap(['green', 'yellow'])
-    plt.imshow(self.temperatures[t], origin='lower', cmap=cm.jet)#, vmin=0)#, 
+    plt.imshow(temperatures[t], origin='lower', cmap=cm.jet)#, vmin=0)#, 
                #vmin=0, vmax=np.max(np.array(self.temperatures)))
     plt.colorbar()
     plt.show()
