@@ -36,7 +36,7 @@ class discrete:
     else:
       A = np.zeros((self.timesteps, self.A.shape[0], self.A.shape[1]))
       A[0] = self.A
-      alpha = 1
+      #alpha = 1
       #F = np.ones_like(self.A)*1000
       
       for t in range(1, self.timesteps):
@@ -154,30 +154,30 @@ class continuous:
 
   def solveSPDE1(self, sigma):
     # Solve
-    U = np.zeros((self.T+1, self.u0.flatten().shape[0]))
-    U[0,:] = self.u0.flatten()
+    U = np.zeros((self.T+1, self.M, self.N))
+    U[0] = self.u0
     
     for i in range(1, self.T+1):
-        W =  self.F(U[i-1,:], self.t, self.mu)
-        U[i,:] = U[i-1,:] + W*self.dt + sigma*np.random.normal(0, self.dt, W.shape)
+        W =  self.F(U[i-1], self.t, self.mu)
+        U[i] = U[i-1] + W*self.dt + sigma*np.random.normal(0, self.dt, W.shape)
     
     return U
     
 
   def solveSPDE2(self, sigma):
     # Solve
-    U = np.zeros((self.T+1,self.u0.flatten().shape[0]))
-    U[0,:] = self.u0.flatten()
+    U = np.zeros((self.T+1, self.M, self.N))
+    U[0] = self.u0
     for i in range(1, self.T+1):
-        W =  self.F(U[i-1,:], self.t, self.mu)
-        U[i,:] = U[i-1,:] + W*self.dt + self.dt*sigma*np.random.normal(0, 1, W.shape)*W/self.mu
+        W =  self.F(U[i-1], self.t, self.mu)
+        U[i] = U[i-1] + W*self.dt + self.dt*sigma*np.random.normal(0, 1, W.shape)*W/self.mu
     
     return U
     
 
   def plotTemperatures(self, t, temperatures):
     fine = np.linspace(0, 1, 2*self.N)
-    fu = interp2d(self.x, self.y, temperatures[t].reshape(self.u0.shape), kind='cubic')
+    fu = interp2d(self.x, self.y, temperatures[t], kind='cubic')
     U = fu(fine, fine)
     #U = temperatures[t].reshape(self.u0.shape)
     plt.imshow(U, origin='lower', cmap=plt.cm.jet)

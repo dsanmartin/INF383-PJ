@@ -31,23 +31,26 @@ initial,A = temperatureFocus(M, N)
 
 # Parameters
 mu = 1/5 
-T = 100
-dt = 1e-3
+T = 300
+dt = 1e-4
 b = 8000
 maxTemp = 1000
-c = 1/5
 
 # We have to include border conditions, for now only 
 # use dirichlet f(x,y) = u(x,y) for (x,y) \in \partial\Omega
-#ct = temp.continuous(initial, mu, dt, T, b, maxTemp, A)
-#pde1, AA = ct.solvePDE()
-#spde1 = ct.solveSPDE1()
-#spde2 = ct.solveSPDE2()
-
-# Discrete
-dtemp = temp.discrete(c, initial, T, A, b, maxTemp)
-dtemps, _ = dtemp.propagate(1/5, 1/5)
+ct = temp.continuous(initial, mu, dt, T, b, maxTemp, A)
+pde1, AA = ct.solvePDE()
+#spde1 = ct.solveSPDE1(1/30)
+#spde2 = ct.solveSPDE2(1/5)
 
 for i in range(T):
   if i % 10 == 0:
-    dtemp.plotTemperatures(i, dtemps)
+    ct.plotTemperatures(i, pde1)
+
+## Discrete
+#dtemp = temp.discrete(mu, initial, T, A, b, maxTemp)
+#dtemps, _ = dtemp.propagate(1/5, 1/5)
+#
+#for i in range(T):
+#  if i % 10 == 0:
+#    dtemp.plotTemperatures(i, dtemps)
