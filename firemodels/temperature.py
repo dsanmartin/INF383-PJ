@@ -25,8 +25,8 @@ class discrete:
         # Noises
         n1, n2 = 0, 0
       
-        if sigma1 is not None: n1 = np.random.normal(0, sigma1, size=grid.shape)
-        if sigma2 is not None: n2 = np.random.normal(0, sigma2, size=grid.shape)
+        if sigma1 is not None: n1 = sigma1 * np.random.normal(0, 1, size=grid.shape)
+        if sigma2 is not None: n2 = sigma2 * np.random.normal(0, 1, size=grid.shape)
         
         temperatures[t] = (self.c + n1)*(np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
                 + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) - 4*grid) + grid + n2
@@ -92,6 +92,7 @@ class continuous:
     self.b = b
     self.maxTemp = maxTemp
     self.A = A
+    print("here2")
     
   
   def F(self, U, t, mu):    
@@ -103,17 +104,18 @@ class continuous:
     # np.diff(U[1:-1,:], n=2, axis=1) / self.dy**2)
     dx = self.dx
     dy = self.dy
-    W = mu * (np.gradient(np.gradient(U, dx, axis=0), dx, axis=0)+ \
-      np.gradient(np.gradient(U, dy, axis=1), dy, axis=1))
-    #W = self.mu*((np.roll(U, -1, axis=0) + np.roll(U, 1, axis=0))/dx**2 + \
-    #             (np.roll(U, 1, axis=1) + np.roll(U, -1, axis=1))/dy**2 - 2*U/dx*-2*U/dy**2) 
+    #W = mu * (np.gradient(np.gradient(U, dx, axis=0), dx, axis=0)+ \
+    #  np.gradient(np.gradient(U, dy, axis=1), dy, axis=1))
+    
+    W = (np.roll(U,1,axis=0) + np.roll(U,-1,axis=0) +\
+              np.roll(U,-1,axis=1) + np.roll(U,1,axis=1) - 4*U)/dx**2
     
     #return W.flatten() # Flatten for odeint
     return W
     
     
   # Solve PDE
-  def solvePDE(self):
+  def solvePDE(self, sigma1 = None, sigma2 = None):
     
     # Method of lines
     #U = odeint(self.F, self.u0.flatten(), self.t, args=(self.mu,)) 
@@ -123,16 +125,24 @@ class continuous:
     #U = np.zeros((self.T+1, self.u0.flatten().shape[0]))
     #U[0,:] = self.u0.flatten()
     #A = A.flatten()
+            
     U = np.zeros((self.T+1, self.M, self.N))
     U[0] = self.u0
     
     if self.A is None:
       
       for i in range(1, self.T + 1):
-        W =  self.F(U[i-1], self.t, self.mu)
-        U[i] = U[i-1] + W * self.dt
+          
+        # Noises
+        n1, n2 = 0, 0
+
+        if sigma1 is not None: n1 = sigma1 * np.random.normal(0, self.dt, size=self.u0.shape)
+        if sigma2 is not None: n2 = sigma2 * np.random.normal(0, self.dt, size=self.u0.shape)
         
-      return U
+        W =  self.F(U[i-1], self.t, self.mu)
+        U[i] = U[i-1] + (self.mu *self.dt + np.sqrt(self.dt)*n1 ) * W + np.sqrt(self.dt)*n2
+        
+      return U, U
     
     else:
       A = np.zeros((self.T+1, self.M, self.N))
@@ -141,14 +151,24 @@ class continuous:
       for i in range(1, self.T+1):
         tmp = np.zeros((self.M, self.N))
         tmp[U[i-1] >= 400] = 1
-        #tmp[U[i-1] < 400] = 0
+        
         A[i] = tmp 
-          
+        
+        # Noises
+        n1, n2 = 0, 0
+
+        if sigma1 is not None: n1 = sigma1 * np.random.normal(0, np.sqrt(self.dt), size=self.u0.shape)
+        if sigma2 is not None: n2 = sigma2 * np.random.normal(0, np.sqrt(self.dt), size=self.u0.shape)
+        
+        #if sigma1 is not None: n1 = sigma1 *np.sqrt(self.dt)* np.random.normal(0, 1, size=self.u0.shape)
+        #if sigma2 is not None: n2 = sigma2 * np.sqrt(self.dt)*np.random.normal(0, 1, size=self.u0.shape)
+        
         W =  self.F(U[i-1], self.t, self.mu)
           
-        U[i] = U[i-1] + (1 - A[i])*W*self.dt + A[i]*(self.maxTemp - U[i-1])*U[i-1]*self.dt/self.b   
+        U[i] = U[i-1] + (1 - A[i])*((self.mu**2 *self.dt + 2*self.mu*np.sqrt(self.dt)*n1 ) * W \
+         + n2) + A[i]*(self.maxTemp - U[i-1])*U[i-1]*self.dt/self.b   
         
-      return U, A
+      return U, A, W
         
         
 
