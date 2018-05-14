@@ -165,7 +165,7 @@ class continuous:
         
         W =  self.F(U[i-1], self.t, self.mu)
           
-        U[i] = U[i-1] + (1 - A[i])*((self.mu**2 *self.dt + 2*self.mu*np.sqrt(self.dt)*n1 ) * W \
+        U[i] = U[i-1] + (1 - A[i])*((self.mu *self.dt + np.sqrt(self.dt)*n1 ) * W \
          + n2) + A[i]*(self.maxTemp - U[i-1])*U[i-1]*self.dt/self.b   
         
       return U, A, W
