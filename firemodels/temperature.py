@@ -1,22 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import odeint
+#from scipy.integrate import odeint
 from scipy.interpolate import interp2d
 
 class discrete:
   #temperatures = []
   
-  def __init__(self, c, initial, timesteps, A=None, b=None, maxTemp=None):
+  def __init__(self, c, initial, timesteps, A=None, b=None, maxTemp=None, Ea=None, Z=None, H=None):
     self.c = c
     self.initial = initial
     self.timesteps = timesteps
     self.A = A
     self.b = b
     self.maxTemp = maxTemp
+    self.Ea = Ea
+    self.Z = Z
+    self.H = H
     
   def propagate(self, sigma1=None, sigma2=None):
     temperatures = np.zeros((self.timesteps, self.initial.shape[0], self.initial.shape[1]))
     temperatures[0] = self.initial
+    fuel = np.zeros((self.timesteps, self.initial.shape[0], self.initial.shape[1]))
+    fuel[0] = np.ones_like(self.A)
+    
     
     if self.A is None:
       for t in range(1, self.timesteps):
@@ -29,13 +35,14 @@ class discrete:
         if sigma2 is not None: n2 = sigma2 * np.random.normal(0, 1, size=grid.shape)
         
         temperatures[t] = (self.c + n1)*(np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
-                + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) - 4*grid) + grid + n2
+                + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) - 4*grid) + grid + n2                
         
       return temperatures
     
     else:
       A = np.zeros((self.timesteps, self.A.shape[0], self.A.shape[1]))
       A[0] = self.A
+      
       #alpha = 1
       #F = np.ones_like(self.A)*1000
       
@@ -50,23 +57,38 @@ class discrete:
         n1, n2 = 0, 0
       
         if sigma1 is not None: n1 = np.random.normal(0, sigma1, size=grid.shape)
-        if sigma2 is not None: n2 = np.random.normal(0, sigma2, size=grid.shape)
+        if sigma2 is not None: n2 = np.random.normal(0, sigma2, size=grid.shape)                
         
-        temperatures[t] = (1 - A[t-1])*((self.c + n1)*(east + west + north + south - 4*grid) + grid)\
-                + A[t-1]*(grid*(self.maxTemp - grid)/self.b + grid) + n2
+        r = self.Z * np.exp(-self.Ea/(1e-14+temperatures[t-1]))
+        
+        #if r == 1:
+          
+        fv = A[t-1]*r*fuel[t-1]
+        
+        fuel[t] = fuel[t-1] - fv
+        
+#        temperatures[t] = (1 - A[t-1])*((self.c + n1)*(east + west + north + south - 4*grid) + grid)\
+#                + A[t-1]*(grid*(self.maxTemp - grid)/self.b + grid) + n2
+                
+        temperatures[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid\
+                + A[t-1]*self.H*fv + n2
+                
+                
+        tmp = np.zeros_like(self.A)
+        #tmp = F
+        tmp[temperatures[t] >= 400] = 1
+        A[t] = tmp
+                
+        
                 
         #F = np.maximum(np.zeros_like(grid), (1-alpha*A[t-1]*temperatures[t])*F)
         #plt.imshow(F)
         #plt.show()
+      
         
         
-        tmp = np.zeros_like(self.A)
-        #tmp = F
-        tmp[temperatures[t] >= 400] = 1
         
-        A[t] = tmp
-        
-      return temperatures, A
+      return temperatures, A, fuel
   
   def plotTemperatures(self, t, temperatures):
     plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)#, vmin=0)#, 
@@ -163,7 +185,7 @@ class continuous:
         #if sigma1 is not None: n1 = sigma1 *np.sqrt(self.dt)* np.random.normal(0, 1, size=self.u0.shape)
         #if sigma2 is not None: n2 = sigma2 * np.sqrt(self.dt)*np.random.normal(0, 1, size=self.u0.shape)
         
-        W =  self.F(U[i-1], self.t, self.mu)
+        W = self.F(U[i-1], self.t, self.mu)
           
         U[i] = U[i-1] + (1 - A[i])*((self.mu *self.dt + np.sqrt(self.dt)*n1 ) * W \
          + n2) + A[i]*(self.maxTemp - U[i-1])*U[i-1]*self.dt/self.b   
@@ -199,7 +221,7 @@ class continuous:
     fine = np.linspace(0, 1, 2*self.N)
     fu = interp2d(self.x, self.y, temperatures[t], kind='cubic')
     U = fu(fine, fine)
-    #U = temperatures[t].reshape(self.u0.shape)
+    #U = temperatures[t]
     plt.imshow(U, origin='lower', cmap=plt.cm.jet)
     plt.colorbar()
     plt.show()

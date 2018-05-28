@@ -10,10 +10,10 @@ def temperatureFocus(M, N):
     A[M//2,N//2] = 1
     A[M//2+1,N//2] = 1
     temperature = temperature + A * 600
-    A = np.zeros((M,N))
+    #A = np.zeros((M,N))
     return temperature,A
 
-def temperatureFocus(M, N):
+def temperatureFocusExp(M, N):
     x = np.linspace(0, 1, N)
     y = np.linspace(0, 1, M)
     X, Y = np.meshgrid(x, y)
@@ -23,10 +23,10 @@ def temperatureFocus(M, N):
 
   
 # The resolution have to be lower than discrete version for computation of F
-M, N = 100, 100
+M, N = 500, 500
 
 # Initial conditions
-initial,A = temperatureFocus(M, N)
+initial, A = temperatureFocus(M, N)
 
 
 # Parameters
@@ -41,7 +41,7 @@ maxTemp = 1000
 # use dirichlet f(x,y) = u(x,y) for (x,y) \in \partial\Omega
 ct = temp.continuous(initial, mu, dt, T, b, maxTemp, A=A)
 
-pde1, A, W = ct.solvePDE(8/30,200)
+pde1, As, W = ct.solvePDE(1/8, 2000)
 #spde1 = ct.solveSPDE1(1/30)
 #spde2 = ct.solveSPDE2(1/5)
 
@@ -49,11 +49,14 @@ for i in range(T):
   if i % 100 == 0:
     ct.plotTemperatures(i, pde1)
 #%%
-    
+Ea = 1
+Z = .1
+H = 5500
 ## Discrete
 #dtemp = temp.discrete(mu, initial, T, A, b, maxTemp)
-#dtemps, _ = dtemp.propagate(4/30, 20)
+dtemp = temp.discrete(mu, initial, T, A, b, maxTemp, Ea, Z, H)
+dtemps, _, fuel = dtemp.propagate()#4/30, 20)
 #
-#for i in range(T):
-#  if i % 10 == 0:
-#    dtemp.plotTemperatures(i, dtemps)
+for i in range(T):
+  #if i % 100 == 0:
+  dtemp.plotTemperatures(i, dtemps)
