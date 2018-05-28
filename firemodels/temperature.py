@@ -46,6 +46,8 @@ class discrete:
       #alpha = 1
       #F = np.ones_like(self.A)*1000
       
+      fv = np.zeros_like(self.A) 
+      
       for t in range(1, self.timesteps):
         grid = temperatures[t-1]
         east = np.roll(grid, 1, axis=0) 
@@ -57,21 +59,27 @@ class discrete:
         n1, n2 = 0, 0
       
         if sigma1 is not None: n1 = np.random.normal(0, sigma1, size=grid.shape)
-        if sigma2 is not None: n2 = np.random.normal(0, sigma2, size=grid.shape)                
+        if sigma2 is not None: n2 = np.random.normal(0, sigma2, size=grid.shape)   
+
+        if self.Z is not None:
         
-        r = self.Z * np.exp(-self.Ea/(1e-14+temperatures[t-1]))
+            r = self.Z * np.exp(-self.Ea/(1e-14+temperatures[t-1]))
         
-        #if r == 1:
-          
-        fv = A[t-1]*r*fuel[t-1]
+            fv = A[t-1]*r*fuel[t-1]
         
-        fuel[t] = fuel[t-1] - fv
-        
-#        temperatures[t] = (1 - A[t-1])*((self.c + n1)*(east + west + north + south - 4*grid) + grid)\
-#                + A[t-1]*(grid*(self.maxTemp - grid)/self.b + grid) + n2
+            fuel[t] = fuel[t-1] - fv
+            
+            fv *= self.H
+            
+            temperatures[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid\
+                + A[t-1]*fv + n2
+        else:
+            temperatures[t] = (1 - A[t-1])*((self.c + n1)*(east + west + north + south - 4*grid) + grid)\
+                + A[t-1]*(grid*(self.maxTemp - grid)/self.b + grid) + n2
                 
-        temperatures[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid\
-                + A[t-1]*self.H*fv + n2
+        #temperatures[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid\
+        #    + A[t-1]*fv + n2
+                #+ A[t-1]*self.H*fv + n2
                 
                 
         tmp = np.zeros_like(self.A)
@@ -90,11 +98,29 @@ class discrete:
         
       return temperatures, A, fuel
   
+  def plotSimulation(self, t, temperatures, fuel):
+      plt.figure(figsize=(10, 8))
+      plt.subplot(1, 2, 1)
+      temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)
+      plt.title("Temperatures")
+      plt.colorbar(temp, fraction=0.046, pad=0.04)
+      
+      plt.subplot(1, 2, 2)
+      fuel = plt.imshow(fuel[t], origin='lower', cmap=plt.cm.Oranges)
+      plt.title("Fuel")
+      plt.colorbar(fuel, fraction=0.046, pad=0.04)
+      
+      plt.tight_layout()
+      
+      plt.show()
+      
+  
   def plotTemperatures(self, t, temperatures):
     plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)#, vmin=0)#, 
                #vmin=0, vmax=np.max(np.array(self.temperatures)))
     plt.colorbar()
     plt.show()
+    
     
 
 class continuous:
@@ -114,7 +140,7 @@ class continuous:
     self.b = b
     self.maxTemp = maxTemp
     self.A = A
-    print("here2")
+    #print("here2")
     
   
   def F(self, U, t, mu):    

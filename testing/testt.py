@@ -23,7 +23,7 @@ def temperatureFocusExp(M, N):
 
   
 # The resolution have to be lower than discrete version for computation of F
-M, N = 500, 500
+M, N = 50, 50
 
 # Initial conditions
 initial, A = temperatureFocus(M, N)
@@ -53,10 +53,14 @@ Ea = 1
 Z = .1
 H = 5500
 ## Discrete
-#dtemp = temp.discrete(mu, initial, T, A, b, maxTemp)
-dtemp = temp.discrete(mu, initial, T, A, b, maxTemp, Ea, Z, H)
+dtemp = temp.discrete(mu, initial, T, A, b, maxTemp, 0, 0, 0)
+#dtemp = temp.discrete(mu, initial, T, A, b, maxTemp, Ea, Z, H)
 dtemps, _, fuel = dtemp.propagate()#4/30, 20)
-#
+#%%
 for i in range(T):
   #if i % 100 == 0:
   dtemp.plotTemperatures(i, dtemps)
+#%%
+for i in range(T):
+  #if i % 100 == 0:
+  dtemp.plotSimulation(i, dtemps, fuel)
