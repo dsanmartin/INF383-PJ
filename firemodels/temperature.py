@@ -6,11 +6,12 @@ from scipy.interpolate import interp2d
 class discrete:
   #temperatures = []
   
-  def __init__(self, c, initial, timesteps, A=None, b=None, maxTemp=None, Ea=None, Z=None, H=None):
+  def __init__(self, c, T0, timesteps, A0=None, Y0=None, b=None, maxTemp=None, Ea=None, Z=None, H=None):
     self.c = c
-    self.initial = initial
+    self.initial = T0
     self.timesteps = timesteps
-    self.A = A
+    self.A = A0
+    self.Y0 = Y0
     self.b = b
     self.maxTemp = maxTemp
     self.Ea = Ea
@@ -21,7 +22,6 @@ class discrete:
     temperatures = np.zeros((self.timesteps, self.initial.shape[0], self.initial.shape[1]))
     temperatures[0] = self.initial
     fuel = np.zeros((self.timesteps, self.initial.shape[0], self.initial.shape[1]))
-    fuel[0] = np.ones_like(self.A)
     
     
     if self.A is None:
@@ -42,9 +42,8 @@ class discrete:
     else:
       A = np.zeros((self.timesteps, self.A.shape[0], self.A.shape[1]))
       A[0] = self.A
-      
-      #alpha = 1
-      #F = np.ones_like(self.A)*1000
+
+      fuel[0] = self.Y0
       
       fv = np.zeros_like(self.A) 
       
@@ -85,29 +84,28 @@ class discrete:
         tmp = np.zeros_like(self.A)
         #tmp = F
         tmp[temperatures[t] >= 400] = 1
+        tmp[fuel[t] == 0] = 0 
         A[t] = tmp
-                
-        
-                
-        #F = np.maximum(np.zeros_like(grid), (1-alpha*A[t-1]*temperatures[t])*F)
-        #plt.imshow(F)
-        #plt.show()
-      
         
         
         
       return temperatures, A, fuel
   
-  def plotSimulation(self, t, temperatures, fuel):
+  def plotSimulation(self, t, temperatures, fuels, trees):
       plt.figure(figsize=(10, 8))
-      plt.subplot(1, 2, 1)
+      plt.subplot(1, 3, 1)
       temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)
-      plt.title("Temperatures")
+      plt.title("Temperature")
       plt.colorbar(temp, fraction=0.046, pad=0.04)
       
-      plt.subplot(1, 2, 2)
-      fuel = plt.imshow(fuel[t], origin='lower', cmap=plt.cm.Oranges)
-      plt.title("Fuel")
+      plt.subplot(1, 3, 2)
+      tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot)
+      plt.title("Burning trees")
+      plt.colorbar(tree, fraction=0.046, pad=0.04)
+      
+      plt.subplot(1, 3, 3)
+      fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges)
+      plt.title("Fuel available")
       plt.colorbar(fuel, fraction=0.046, pad=0.04)
       
       plt.tight_layout()
