@@ -84,7 +84,7 @@ class discrete:
         tmp = np.zeros_like(self.A)
         #tmp = F
         tmp[temperatures[t] >= 400] = 1
-        tmp[fuel[t] == 0] = 0 
+        tmp[fuel[t] <= 1e-2] = 0 
         A[t] = tmp
         
         
@@ -111,6 +111,33 @@ class discrete:
       plt.tight_layout()
       
       plt.show()
+      
+  def plotSimulation2(self, temperatures, fuels, trees):
+      T = len(temperatures)
+      for t in range(T):
+          if t % 10 == 0:
+              plt.figure(figsize=(10, 8))
+              plt.subplot(1, 3, 1)
+              temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet, 
+                                vmin=np.min(temperatures), vmax=np.max(temperatures))
+              plt.title("Temperature")
+              plt.colorbar(temp, fraction=0.046, pad=0.04)
+              
+              plt.subplot(1, 3, 2)
+              tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot,
+                                vmin=np.min(trees), vmax=np.max(trees))
+              plt.title("Burning trees")
+              plt.colorbar(tree, fraction=0.046, pad=0.04)
+              
+              plt.subplot(1, 3, 3)
+              fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges,
+                                vmin=np.min(fuels), vmax=np.max(fuels))
+              plt.title("Fuel available")
+              plt.colorbar(fuel, fraction=0.046, pad=0.04)
+              
+              plt.tight_layout()
+              
+              plt.show()    
       
   
   def plotTemperatures(self, t, temperatures):

@@ -50,7 +50,7 @@ initial, A, Y = temperatureFocus2(M, N)
 
 # Parameters
 mu = 1/5 
-T = 200#0
+T = 500#0
 dt = 1e-4
 b = 8
 maxTemp = 1000
@@ -73,8 +73,10 @@ Z = .1
 H = 5500
 ## Discrete
 #dtemp = temp.discrete(mu, initial, T, A, Y, b*1000, maxTemp)#, 0, 0, 0)
-dtemp = temp.discrete(mu, initial, T, A, Y, b, maxTemp, Ea, Z, H)
-dtemps, As, fuels = dtemp.propagate()#4/30, 20)
+dtemp = temp.discrete(mu, initial, T, A, Y, b, maxTemp, Ea*1e-3, Z, H)
+dtemps, As, fuels = dtemp.propagate(4/30, 20)
+#%%
+dtemp.plotSimulation2(dtemps, fuels, As)
 #%%
 for i in range(T):
   if i % 10 == 0:
