@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp2d
 
 class discrete:
-  #temperatures = []
   
-  def __init__(self, c, T0, timesteps, A0=None, Y0=None, b=None, maxTemp=None, Ea=None, Z=None, H=None):
+  def __init__(self, c, T0, timesteps, A0=None, Y0=None, V0=None, b=None, maxTemp=None, Ea=None, Z=None, H=None):
     self.c = c
-    self.initial = T0
+    self.T0 = T0
     self.timesteps = timesteps
-    self.A = A0
+    self.A0 = A0
     self.Y0 = Y0
+    self.V0 = V0
     self.b = b
     self.maxTemp = maxTemp
     self.Ea = Ea
@@ -19,14 +19,12 @@ class discrete:
     self.H = H
     
   def propagate(self, sigma1=None, sigma2=None):
-    temperatures = np.zeros((self.timesteps, self.initial.shape[0], self.initial.shape[1]))
-    temperatures[0] = self.initial
-    fuel = np.zeros((self.timesteps, self.initial.shape[0], self.initial.shape[1]))
+    T = np.zeros((self.timesteps, self.T0.shape[0], self.T0.shape[1]))
+    T[0] = self.T0    
     
-    
-    if self.A is None:
+    if self.A0 is None:
       for t in range(1, self.timesteps):
-        grid = temperatures[t-1]
+        grid = T[t-1]
         
         # Noises
         n1, n2 = 0, 0
@@ -34,21 +32,38 @@ class discrete:
         if sigma1 is not None: n1 = sigma1 * np.random.normal(0, 1, size=grid.shape)
         if sigma2 is not None: n2 = sigma2 * np.random.normal(0, 1, size=grid.shape)
         
-        temperatures[t] = (self.c + n1)*(np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
-                + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) - 4*grid) + grid + n2                
         
-      return temperatures
+        # Diffusion
+        T[t] = (self.c + n1)*(np.roll(grid, 1, axis=0) + np.roll(grid, -1, axis=0) \
+                + np.roll(grid, 1, axis=1) + np.roll(grid, -1, axis=1) - 4*grid) + grid + n2      
+
+        # Convection
+        if self.V0 is not None:
+          v1, v2 = self.V0
+          
+          if v1 >= 0:
+            T[t] -= v1*(grid - np.roll(grid, 1, axis=1)) 
+          else:
+            T[t] -= v1*(np.roll(grid, -1, axis=1) - grid) 
+              
+          if v2 >= 0:
+            T[t] -= v2*(grid - np.roll(grid, 1, axis=0)) 
+          else:
+            T[t] -= v2*(np.roll(grid, -1, axis=0) - grid) 
+        
+      return T
     
     else:
-      A = np.zeros((self.timesteps, self.A.shape[0], self.A.shape[1]))
-      A[0] = self.A
-
-      fuel[0] = self.Y0
+      A = np.zeros((self.timesteps, self.A0.shape[0], self.A0.shape[1]))
+      A[0] = self.A0
       
-      fv = np.zeros_like(self.A) 
+      Y = np.zeros((self.timesteps, self.Y0.shape[0], self.Y0.shape[1]))
+      Y[0] = self.Y0
+      
+      fv = np.zeros_like(self.A0) 
       
       for t in range(1, self.timesteps):
-        grid = temperatures[t-1]
+        grid = T[t-1]
         east = np.roll(grid, 1, axis=0) 
         west = np.roll(grid, -1, axis=0)
         north = np.roll(grid, -1, axis=1)
@@ -61,83 +76,90 @@ class discrete:
         if sigma2 is not None: n2 = np.random.normal(0, sigma2, size=grid.shape)   
 
         if self.Z is not None:
-        
-            r = self.Z * np.exp(-self.Ea/(1e-14+temperatures[t-1]))
-        
-            fv = A[t-1]*r*fuel[t-1]
-        
-            fuel[t] = fuel[t-1] - fv
-            
-            fv *= self.H
-            
-            temperatures[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid\
-                + A[t-1]*fv + n2
+    
+          r = self.Z * np.exp(-self.Ea/(1e-14+T[t-1]))
+      
+          fv = A[t-1] * r * Y[t-1]
+      
+          Y[t] = Y[t-1] - fv
+          
+          
+          T[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid \
+            + fv * self.H + n2
         else:
-            temperatures[t] = (1 - A[t-1])*((self.c + n1)*(east + west + north + south - 4*grid) + grid)\
-                + A[t-1]*(grid*(self.maxTemp - grid)/self.b + grid) + n2
+          T[t] = (1 - A[t-1])*((self.c + n1)*(east + west + north + south - 4*grid) + grid)\
+            + A[t-1]*(grid*(self.maxTemp - grid)/self.b + grid) + n2
+
                 
-        #temperatures[t] = (self.c + n1)*(east + west + north + south - 4*grid) + grid\
-        #    + A[t-1]*fv + n2
-                #+ A[t-1]*self.H*fv + n2
+        # Convection
+        if self.V0 is not None:
+          v1, v2 = self.V0
+          
+          if v1 >= 0:
+            T[t] -= v1*(grid - np.roll(grid, 1, axis=1)) 
+          else:
+            T[t] -= v1*(np.roll(grid, -1, axis=1) - grid) 
+              
+          if v2 >= 0:
+            T[t] -= v2*(grid - np.roll(grid, 1, axis=0)) 
+          else:
+            T[t] -= v2*(np.roll(grid, -1, axis=0) - grid) 
                 
-                
-        tmp = np.zeros_like(self.A)
-        #tmp = F
-        tmp[temperatures[t] >= 400] = 1
-        tmp[fuel[t] <= 1e-2] = 0 
+        tmp = np.zeros_like(self.A0)
+        tmp[T[t] >= 400] = 1 # Burn trees
+        tmp[Y[t] <= 1e-2] = 0 # Remove fuel burnt
         A[t] = tmp
         
         
-        
-      return temperatures, A, fuel
+      return T, A, Y
   
   def plotSimulation(self, t, temperatures, fuels, trees):
-      plt.figure(figsize=(10, 8))
-      plt.subplot(1, 3, 1)
-      temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)
-      plt.title("Temperature")
-      plt.colorbar(temp, fraction=0.046, pad=0.04)
-      
-      plt.subplot(1, 3, 2)
-      tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot)
-      plt.title("Burning trees")
-      plt.colorbar(tree, fraction=0.046, pad=0.04)
-      
-      plt.subplot(1, 3, 3)
-      fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges)
-      plt.title("Fuel available")
-      plt.colorbar(fuel, fraction=0.046, pad=0.04)
-      
-      plt.tight_layout()
-      
-      plt.show()
+    plt.figure(figsize=(10, 8))
+    plt.subplot(1, 3, 1)
+    temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)
+    plt.title("Temperature")
+    plt.colorbar(temp, fraction=0.046, pad=0.04)
+    
+    plt.subplot(1, 3, 2)
+    tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot)
+    plt.title("Burning trees")
+    plt.colorbar(tree, fraction=0.046, pad=0.04)
+    
+    plt.subplot(1, 3, 3)
+    fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges)
+    plt.title("Fuel available")
+    plt.colorbar(fuel, fraction=0.046, pad=0.04)
+    
+    plt.tight_layout()
+    
+    plt.show()
       
   def plotSimulation2(self, temperatures, fuels, trees):
-      T = len(temperatures)
-      for t in range(T):
-          if t % 10 == 0:
-              plt.figure(figsize=(10, 8))
-              plt.subplot(1, 3, 1)
-              temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet, 
-                                vmin=np.min(temperatures), vmax=np.max(temperatures))
-              plt.title("Temperature")
-              plt.colorbar(temp, fraction=0.046, pad=0.04)
-              
-              plt.subplot(1, 3, 2)
-              tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot,
-                                vmin=np.min(trees), vmax=np.max(trees))
-              plt.title("Burning trees")
-              plt.colorbar(tree, fraction=0.046, pad=0.04)
-              
-              plt.subplot(1, 3, 3)
-              fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges,
-                                vmin=np.min(fuels), vmax=np.max(fuels))
-              plt.title("Fuel available")
-              plt.colorbar(fuel, fraction=0.046, pad=0.04)
-              
-              plt.tight_layout()
-              
-              plt.show()    
+    T = len(temperatures)
+    for t in range(T):
+      if t % 10 == 0:
+        plt.figure(figsize=(10, 8))
+        plt.subplot(1, 3, 1)
+        temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet, 
+                          vmin=np.min(temperatures), vmax=np.max(temperatures))
+        plt.title("Temperature")
+        plt.colorbar(temp, fraction=0.046, pad=0.04)
+        
+        plt.subplot(1, 3, 2)
+        tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot,
+                          vmin=np.min(trees), vmax=np.max(trees))
+        plt.title("Burning trees")
+        plt.colorbar(tree, fraction=0.046, pad=0.04)
+        
+        plt.subplot(1, 3, 3)
+        fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges,
+                          vmin=np.min(fuels), vmax=np.max(fuels))
+        plt.title("Fuel available")
+        plt.colorbar(fuel, fraction=0.046, pad=0.04)
+        
+        plt.tight_layout()
+        
+        plt.show()    
       
   
   def plotTemperatures(self, t, temperatures):

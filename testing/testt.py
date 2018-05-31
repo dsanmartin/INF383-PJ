@@ -47,6 +47,8 @@ M, N = 50, 50
 initial, A = temperatureFocus(M, N)
 initial, A, Y = temperatureFocus2(M, N)
 
+V = (-.1, -.1)
+
 
 # Parameters
 mu = 1/5 
@@ -78,10 +80,10 @@ dtemps, As, fuels = dtemp.propagate(4/30, 20)
 #%%
 dtemp.plotSimulation2(dtemps, fuels, As)
 #%%
-for i in range(T):
-  if i % 10 == 0:
-      dtemp.plotTemperatures(i, As)#dtemps)
+Ea = 1
+Z = .1
+H = 5500
+dtempv = temp.discrete(mu, initial, T, A, Y, V, b, maxTemp, Ea*1e-3, Z, H) 
+dtempvs, Asv, fuelsv = dtempv.propagate(1/20, 10)
 #%%
-for i in range(T):
-  if i % 10 == 0:
-      dtemp.plotSimulation(i, dtemps, fuels, As)
+dtemp.plotSimulation2(dtempvs, fuelsv, Asv)
