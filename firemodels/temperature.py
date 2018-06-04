@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-#from scipy.integrate import odeint
 from scipy.interpolate import interp2d
 
 class discrete:
@@ -116,17 +115,20 @@ class discrete:
   def plotSimulation(self, t, temperatures, fuels, trees):
     plt.figure(figsize=(10, 8))
     plt.subplot(1, 3, 1)
-    temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet)
+    temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet,
+                      vmin=np.min(temperatures), vmax=np.max(temperatures))
     plt.title("Temperature")
     plt.colorbar(temp, fraction=0.046, pad=0.04)
     
     plt.subplot(1, 3, 2)
-    tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot)
+    tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot,
+                      vmin=np.min(trees), vmax=np.max(trees))
     plt.title("Burning trees")
     plt.colorbar(tree, fraction=0.046, pad=0.04)
     
     plt.subplot(1, 3, 3)
-    fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges)
+    fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges,
+                      vmin=np.min(fuels), vmax=np.max(fuels))
     plt.title("Fuel available")
     plt.colorbar(fuel, fraction=0.046, pad=0.04)
     
@@ -159,7 +161,7 @@ class discrete:
         
         plt.tight_layout()
         
-        plt.show()    
+        plt.show()  
       
   
   def plotTemperatures(self, t, temperatures):

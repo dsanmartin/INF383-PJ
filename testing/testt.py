@@ -86,4 +86,4 @@ H = 5500
 dtempv = temp.discrete(mu, initial, T, A, Y, V, b, maxTemp, Ea*1e-3, Z, H) 
 dtempvs, Asv, fuelsv = dtempv.propagate(1/20, 10)
 #%%
-dtemp.plotSimulation2(dtempvs, fuelsv, Asv)
+dtempv.plotSimulation2(dtempvs, fuelsv, Asv)
