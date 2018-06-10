@@ -52,10 +52,13 @@ V = (-.1, -.1)
 
 # Parameters
 mu = 1/5 
+gamma = 1
 T = 500#0
 dt = 1e-4
 b = 8
 maxTemp = 1000
+h = 10
+T_ref = 30
 
 #%%
 # We have to include border conditions, for now only 
@@ -70,20 +73,24 @@ for i in range(T):
   if i % 100 == 0:
     ct.plotTemperatures(i, pde1)
 #%%
-Ea = 1
-Z = .1
+Ea = 1#*1e-3,
+Z = .05#.1
 H = 5500
+h = 1e-4
+T_ref = 30
 ## Discrete
 #dtemp = temp.discrete(mu, initial, T, A, Y, b*1000, maxTemp)#, 0, 0, 0)
-dtemp = temp.discrete(mu, initial, T, A, Y, b, maxTemp, Ea*1e-3, Z, H)
-dtemps, As, fuels = dtemp.propagate(4/30, 20)
+dtemp = temp.discrete(mu, gamma, T, initial, A, Y, None, b, maxTemp, Ea, Z, H, h, T_ref)
+dtemps, As, fuels = dtemp.propagate()#4/30, 20)
 #%%
 dtemp.plotSimulation2(dtemps, fuels, As)
 #%%
-Ea = 1
+Ea = 1e-3
 Z = .1
 H = 5500
-dtempv = temp.discrete(mu, initial, T, A, Y, V, b, maxTemp, Ea*1e-3, Z, H) 
-dtempvs, Asv, fuelsv = dtempv.propagate(1/20, 10)
+h = 1e-4
+T_ref = 30
+dtempv = temp.discrete(mu, gamma, T, initial, A, Y, V, b, maxTemp, Ea*1e-3, Z, H, h, T_ref) 
+dtempvs, Asv, fuelsv = dtempv.propagate()#1/20, 10)
 #%%
 dtempv.plotSimulation2(dtempvs, fuelsv, Asv)

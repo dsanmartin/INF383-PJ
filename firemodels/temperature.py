@@ -4,10 +4,12 @@ from scipy.interpolate import interp2d
 
 class discrete:
   
-  def __init__(self, c, T0, timesteps, A0=None, Y0=None, V0=None, b=None, maxTemp=None, Ea=None, Z=None, H=None):
+  def __init__(self, c, gamma, timesteps, T0, A0=None, Y0=None, V0=None, 
+               b=None, maxTemp=None, Ea=None, Z=None, H=None, h=1, T_ref=None):
     self.c = c
-    self.T0 = T0
+    self.gamma = gamma
     self.timesteps = timesteps
+    self.T0 = T0    
     self.A0 = A0
     self.Y0 = Y0
     self.V0 = V0
@@ -16,6 +18,8 @@ class discrete:
     self.Ea = Ea
     self.Z = Z
     self.H = H
+    self.h = h
+    self.T_ref = T_ref
     
   def propagate(self, sigma1=None, sigma2=None):
     T = np.zeros((self.timesteps, self.T0.shape[0], self.T0.shape[1]))
@@ -49,6 +53,9 @@ class discrete:
             T[t] -= v2*(grid - np.roll(grid, 1, axis=0)) 
           else:
             T[t] -= v2*(np.roll(grid, -1, axis=0) - grid) 
+            
+        if self.T_ref is not None:
+          T[t] -= self.h * (T[t] - self.T_ref)
         
       return T
     
@@ -103,6 +110,11 @@ class discrete:
             T[t] -= v2*(grid - np.roll(grid, 1, axis=0)) 
           else:
             T[t] -= v2*(np.roll(grid, -1, axis=0) - grid) 
+            
+          T[t] *= self.gamma
+          
+        if self.T_ref is not None:
+          T[t] -= self.h * (T[t] - self.T_ref)
                 
         tmp = np.zeros_like(self.A0)
         tmp[T[t] >= 400] = 1 # Burn trees
