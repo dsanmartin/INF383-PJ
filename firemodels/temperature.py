@@ -42,17 +42,18 @@ class discrete:
 
         # Convection
         if self.V0 is not None:
-          v1, v2 = self.V0
+          if len(self.V0) == 1: v1, v2 = self.V0[0]
+          else: v1, v2 = self.V0[t]
           
           if v1 >= 0:
-            T[t] -= v1*(grid - np.roll(grid, 1, axis=1)) 
+            T[t] -= self.gamma*v1*(grid - np.roll(grid, 1, axis=1)) 
           else:
-            T[t] -= v1*(np.roll(grid, -1, axis=1) - grid) 
+            T[t] -= self.gamma*v1*(np.roll(grid, -1, axis=1) - grid) 
               
           if v2 >= 0:
-            T[t] -= v2*(grid - np.roll(grid, 1, axis=0)) 
+            T[t] -= self.gamma*v2*(grid - np.roll(grid, 1, axis=0)) 
           else:
-            T[t] -= v2*(np.roll(grid, -1, axis=0) - grid) 
+            T[t] -= self.gamma*v2*(np.roll(grid, -1, axis=0) - grid) 
             
         if self.T_ref is not None:
           T[t] -= self.h * (T[t] - self.T_ref)
@@ -99,19 +100,20 @@ class discrete:
                 
         # Convection
         if self.V0 is not None:
-          v1, v2 = self.V0
+          #v1, v2 = self.V0[t]
+          if len(self.V0) == 1: v1, v2 = self.V0[0]
+          else: v1, v2 = self.V0[t]
           
           if v1 >= 0:
-            T[t] -= v1*(grid - np.roll(grid, 1, axis=1)) 
+            T[t] -= self.gamma*v1*(grid - np.roll(grid, 1, axis=1)) 
           else:
-            T[t] -= v1*(np.roll(grid, -1, axis=1) - grid) 
+            T[t] -= self.gamma*v1*(np.roll(grid, -1, axis=1) - grid) 
               
           if v2 >= 0:
-            T[t] -= v2*(grid - np.roll(grid, 1, axis=0)) 
+            T[t] -= self.gamma*v2*(grid - np.roll(grid, 1, axis=0)) 
           else:
-            T[t] -= v2*(np.roll(grid, -1, axis=0) - grid) 
+            T[t] -= self.gamma*v2*(np.roll(grid, -1, axis=0) - grid) 
             
-          T[t] *= self.gamma
           
         if self.T_ref is not None:
           T[t] -= self.h * (T[t] - self.T_ref)

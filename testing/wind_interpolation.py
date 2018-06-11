@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 
 #%%
-my_data = np.genfromtxt('../data/originald08.csv', delimiter=',', skip_header=1)
+my_data = np.genfromtxt('./data/originald08.csv', delimiter=',', skip_header=1)
 v_spe = my_data[:, 4]
 v_dir = my_data[:, 7] 
 
@@ -39,6 +39,6 @@ plt.show()
 XX = np.ones((10, 10))
 YY = np.ones_like(XX)
 
-for i in range(0, len(xv), 25):
+for i in range(0, len(xv), 10):
   plt.quiver(XX*xv[i], YY*yv[i])
   plt.show()
