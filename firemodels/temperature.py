@@ -260,21 +260,21 @@ class continuous:
     As = np.zeros_like(U)
     U[0] = self.u0
     Y[0] = self.y0
+    As[0] = self.A
     
     V1, V2 = np.ones_like(U[0])*self.V[0], np.ones_like(Y[0])*self.V[1]
       
     for i in range(1, self.T + 1):
-      U[i] = U[i-1] + self.dt*self.F(U[i-1], Y[i-1], V1, V2)
+      U[i] = U[i-1] + self.dt*self.F(U[i-1], Y[i-1], V1, V2)      
+      Y[i] = Y[i-1] + self.dt*self.G(U[i-1], Y[i-1], As[i-1])
       
-      tmp = np.zeros_like(U[i])
+      #print(np.max(self.dt*self.G(U[i-1], Y[i-1], As[i-1])))
+      
+      tmp = np.zeros_like(self.A)
       tmp[U[i] >= 400] = 1 # Burn trees
       tmp[Y[i] <= 1e-2] = 0 # Remove fuel burnt
       #self.A = tmp
       As[i] = tmp
-      
-      Y[i] = Y[i-1] + self.dt*self.G(U[i-1], Y[i-1], tmp)
-      
-      print(np.max(self.dt*self.G(U[i-1], Y[i-1], tmp)))
       
       
     
@@ -370,3 +370,27 @@ class continuous:
     plt.colorbar()
     plt.show()
     
+    
+  def plotSimulation(self, t, temperatures, fuels, trees):
+    plt.figure(figsize=(10, 8))
+    plt.subplot(1, 3, 1)
+    temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet,
+                      vmin=np.min(temperatures), vmax=np.max(temperatures))
+    plt.title("Temperature")
+    plt.colorbar(temp, fraction=0.046, pad=0.04)
+    
+    plt.subplot(1, 3, 2)
+    tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot,
+                      vmin=np.min(trees), vmax=np.max(trees))
+    plt.title("Burning trees")
+    plt.colorbar(tree, fraction=0.046, pad=0.04)
+    
+    plt.subplot(1, 3, 3)
+    fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges,
+                      vmin=np.min(fuels), vmax=np.max(fuels))
+    plt.title("Fuel available")
+    plt.colorbar(fuel, fraction=0.046, pad=0.04)
+    
+    plt.tight_layout()
+    
+    plt.show()
