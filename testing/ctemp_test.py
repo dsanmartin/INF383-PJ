@@ -70,8 +70,10 @@ for i in range(T):
   #if i %10 == 0:
   ct.plotTemperatures(i, U)
   plt.imshow(AA[i], origin="lower", cmap=plt.cm.afmhot)
+  plt.colorbar()
   plt.show()
   plt.imshow(Y[i], origin="lower")
+  plt.colorbar()
   plt.show()
   
 #ct.plotTemperatures(len(U)-1, U)

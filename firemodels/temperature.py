@@ -251,8 +251,8 @@ class continuous:
     return diff - conv + reac - cool
   
   
-  def G(self, U, Y):
-    return -self.Z * Y * np.exp(-self.Ea / U)
+  def G(self, U, Y, A):
+    return -self.Z * Y * A * np.exp(-self.Ea / U)
   
   def solvePDE(self):
     U = np.zeros((self.T+1, self.M, self.N))
@@ -265,13 +265,18 @@ class continuous:
       
     for i in range(1, self.T + 1):
       U[i] = U[i-1] + self.dt*self.F(U[i-1], Y[i-1], V1, V2)
-      Y[i] = Y[i-1] + self.dt*self.G(U[i-1], Y[i-1])
       
       tmp = np.zeros_like(U[i])
       tmp[U[i] >= 400] = 1 # Burn trees
       tmp[Y[i] <= 1e-2] = 0 # Remove fuel burnt
-      self.A = tmp
+      #self.A = tmp
       As[i] = tmp
+      
+      Y[i] = Y[i-1] + self.dt*self.G(U[i-1], Y[i-1], tmp)
+      
+      print(np.max(self.dt*self.G(U[i-1], Y[i-1], tmp)))
+      
+      
     
     return U, As, Y
     
