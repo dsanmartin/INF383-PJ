@@ -188,25 +188,35 @@ class discrete:
 
 class continuous:
   
-  def __init__(self, u0, mu, dt, T, b=None, maxTemp=None, A=None):
+  def __init__(self, x, y, t, u0, y0, V, mu, gamma, A, Z, H, Ea, h, T_ref):
     self.u0 = u0
+    self.y0 = y0
+    self.V = V
     self.mu = mu
-    self.dt = dt
-    self.T = T
+    self.gamma = gamma
+    self.h = h
+    self.A = A
+    self.Z = Z
+    self.H = H
+    self.Ea = Ea
+    self.h = h
+    self.T_ref = T_ref
+    #self.dt = dt
+    self.T = len(t)
     self.M, self.N = u0.shape
-    self.x = np.linspace(0, 1, self.M)
-    self.y = np.linspace(0, 1, self.N)
-    self.t = np.linspace(0, dt*T, self.T)
+    self.x = x#np.linspace(0, 10, self.M)
+    self.y = y#np.linspace(0, 10, self.N)
+    self.t = t#np.linspace(0, dt*T, self.T)
     self.dx = self.x[1] - self.x[0]
     self.dy = self.y[1] - self.y[0]
     self.dt = self.t[1] - self.t[0]
-    self.b = b
-    self.maxTemp = maxTemp
-    self.A = A
+    #self.b = b
+    #self.maxTemp = maxTemp
+    #self.A = A
     #print("here2")
     
   
-  def F(self, U, t, mu):    
+  def FBK(self, U, t, mu):    
     #U = U.reshape((self.M, self.N))
     W = np.zeros_like(U)
     
@@ -223,10 +233,50 @@ class continuous:
     
     #return W.flatten() # Flatten for odeint
     return W
+  
+  def F(self, U, Y, V1, V2):
     
+    # Diffusion
+    diff = self.mu * (np.roll(U,1,axis=0) + np.roll(U,-1,axis=0) + np.roll(U,-1,axis=1) + np.roll(U,1,axis=1) - 4*U)/ self.dx**2
+    
+    # Convection
+    conv = self.gamma * (V1*(np.roll(U,-1,axis=1) - np.roll(U,1,axis=1)) / (2*self.dx) + V2*(np.roll(U,-1,axis=0) - np.roll(U, 1,axis=0)) / (2*self.dy))
+    
+    # Reaction
+    reac = Y * self.H * self.A * self.Z * np.exp(-self.Ea / U)
+    
+    # Cool
+    cool = self.h*(U - self.T_ref)
+    
+    return diff - conv + reac - cool
+  
+  
+  def G(self, U, Y):
+    return -self.Z * Y * np.exp(-self.Ea / U)
+  
+  def solvePDE(self):
+    U = np.zeros((self.T+1, self.M, self.N))
+    Y = np.zeros_like(U)
+    As = np.zeros_like(U)
+    U[0] = self.u0
+    Y[0] = self.y0
+    
+    V1, V2 = np.ones_like(U[0])*self.V[0], np.ones_like(Y[0])*self.V[1]
+      
+    for i in range(1, self.T + 1):
+      U[i] = U[i-1] + self.dt*self.F(U[i-1], Y[i-1], V1, V2)
+      Y[i] = Y[i-1] + self.dt*self.G(U[i-1], Y[i-1])
+      
+      tmp = np.zeros_like(U[i])
+      tmp[U[i] >= 400] = 1 # Burn trees
+      tmp[Y[i] <= 1e-2] = 0 # Remove fuel burnt
+      self.A = tmp
+      As[i] = tmp
+    
+    return U, As, Y
     
   # Solve PDE
-  def solvePDE(self, sigma1 = None, sigma2 = None):
+  def solvePDEBK(self, sigma1 = None, sigma2 = None):
     
     # Method of lines
     #U = odeint(self.F, self.u0.flatten(), self.t, args=(self.mu,)) 
@@ -250,7 +300,7 @@ class continuous:
         if sigma1 is not None: n1 = sigma1 * np.random.normal(0, self.dt, size=self.u0.shape)
         if sigma2 is not None: n2 = sigma2 * np.random.normal(0, self.dt, size=self.u0.shape)
         
-        W =  self.F(U[i-1], self.t, self.mu)
+        W = self.F(U[i-1], self.t, self.mu)
         U[i] = U[i-1] + (self.mu *self.dt + np.sqrt(self.dt)*n1 ) * W + np.sqrt(self.dt)*n2
         
       return U, U
@@ -307,7 +357,7 @@ class continuous:
     
 
   def plotTemperatures(self, t, temperatures):
-    fine = np.linspace(0, 1, 2*self.N)
+    fine = np.linspace(self.x[0], self.x[-1], 2*self.N)
     fu = interp2d(self.x, self.y, temperatures[t], kind='cubic')
     U = fu(fine, fine)
     #U = temperatures[t]
