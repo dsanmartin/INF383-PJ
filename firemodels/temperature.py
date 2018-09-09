@@ -234,7 +234,7 @@ class continuous:
     #return W.flatten() # Flatten for odeint
     return W
   
-  def F(self, U, Y, V1, V2):
+  def F(self, U, Y, V1, V2, A):
     
     # Diffusion
     diff = self.mu * (np.roll(U,1,axis=0) + np.roll(U,-1,axis=0) + np.roll(U,-1,axis=1) + np.roll(U,1,axis=1) - 4*U)/ self.dx**2
@@ -243,7 +243,7 @@ class continuous:
     conv = self.gamma * (V1*(np.roll(U,-1,axis=1) - np.roll(U,1,axis=1)) / (2*self.dx) + V2*(np.roll(U,-1,axis=0) - np.roll(U, 1,axis=0)) / (2*self.dy))
     
     # Reaction
-    reac = Y * self.H * self.A * self.Z * np.exp(-self.Ea / U)
+    reac = Y * self.H * A * self.Z * np.exp(-self.Ea / U)
     
     # Cool
     cool = self.h*(U - self.T_ref)
@@ -265,7 +265,7 @@ class continuous:
     V1, V2 = np.ones_like(U[0])*self.V[0], np.ones_like(Y[0])*self.V[1]
       
     for i in range(1, self.T + 1):
-      U[i] = U[i-1] + self.dt*self.F(U[i-1], Y[i-1], V1, V2)      
+      U[i] = U[i-1] + self.dt*self.F(U[i-1], Y[i-1], V1, V2, As[i-1])      
       Y[i] = Y[i-1] + self.dt*self.G(U[i-1], Y[i-1], As[i-1])
       
       #print(np.max(self.dt*self.G(U[i-1], Y[i-1], As[i-1])))
@@ -362,7 +362,7 @@ class continuous:
     
 
   def plotTemperatures(self, t, temperatures):
-    fine = np.linspace(self.x[0], self.x[-1], 2*self.N)
+    fine = np.linspace(self.x[0], self.x[-1], 4*self.N)
     fu = interp2d(self.x, self.y, temperatures[t], kind='cubic')
     U = fu(fine, fine)
     #U = temperatures[t]
@@ -373,20 +373,26 @@ class continuous:
     
   def plotSimulation(self, t, temperatures, fuels, trees):
     plt.figure(figsize=(10, 8))
+    fine = np.linspace(self.x[0], self.x[-1], 2*self.N)
+    fu = interp2d(self.x, self.y, temperatures[t], kind='cubic')
+    ff = interp2d(self.x, self.y, fuels[t], kind='cubic')
+    ft = interp2d(self.x, self.y, trees[t], kind='cubic')
+    U, T, F = fu(fine, fine), ft(fine, fine), ff(fine, fine)
+    
     plt.subplot(1, 3, 1)
-    temp = plt.imshow(temperatures[t], origin='lower', cmap=plt.cm.jet,
+    temp = plt.imshow(U, origin='lower', cmap=plt.cm.jet,
                       vmin=np.min(temperatures), vmax=np.max(temperatures))
     plt.title("Temperature")
     plt.colorbar(temp, fraction=0.046, pad=0.04)
     
     plt.subplot(1, 3, 2)
-    tree = plt.imshow(trees[t], origin='lower', cmap=plt.cm.afmhot,
+    tree = plt.imshow(T, origin='lower', cmap=plt.cm.afmhot,
                       vmin=np.min(trees), vmax=np.max(trees))
     plt.title("Burning trees")
     plt.colorbar(tree, fraction=0.046, pad=0.04)
     
     plt.subplot(1, 3, 3)
-    fuel = plt.imshow(fuels[t], origin='lower', cmap=plt.cm.Oranges,
+    fuel = plt.imshow(F, origin='lower', cmap=plt.cm.Oranges,
                       vmin=np.min(fuels), vmax=np.max(fuels))
     plt.title("Fuel available")
     plt.colorbar(fuel, fraction=0.046, pad=0.04)
